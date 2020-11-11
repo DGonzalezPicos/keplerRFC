@@ -125,7 +125,21 @@ ax.set_title("Random Forest Feature Importances (MDI)")
 plt.show()
 
 
-xlabels
+#%%
+#==============================================================================
+#               Feature selection
+#==============================================================================
+# run again the RFC ONLY with the most relevant features
+xlabelsrev = xlabels[::-1]
+newfeat = xlabelsrev[:5]
+
+# Build new model
+X = data[newfeat]
+train_X, val_X, train_y, val_y = train_test_split(X, y, random_state=0)
+forest_model = RandomForestClassifier(random_state=1, n_estimators=100)
+forest_model.fit(train_X, train_y)
+accuracy = forest_model.score(train_X, train_y), forest_model.score(val_X, val_y)
+print('Accuracy on the training {:.2f} and the validation data {:.2f}'.format(*accuracy))
 
 #%%
 # NEXT >>> Is accuracy calculated like that? Other statistics... recall, precision...
