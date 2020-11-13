@@ -2,7 +2,7 @@
 Created on Wed Nov 11 15:58:00 2020
 @author: dariogp
 
-
+Main script for RFC
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -10,17 +10,36 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
-
+#%%
+file = "./koicumulative.csv"
+data = pd.read_csv(file, sep=",")
+feat = ['koi_fpflag_nt', 'koi_fpflag_ss', 'koi_fpflag_co', 'koi_fpflag_ec',
+       'koi_period', 'koi_time0bk',
+       'koi_time0', 'koi_impact', 'koi_duration',
+       'koi_depth', 'koi_ror', 'koi_srho', 'koi_prad', 'koi_sma', 'koi_incl', 'koi_teq', 'koi_insol', 'koi_dor',
+       'koi_ldm_coeff2', 'koi_ldm_coeff1', 'koi_max_sngle_ev',
+       'koi_max_mult_ev', 'koi_model_snr', 'koi_count', 'koi_num_transits',
+       'koi_tce_plnt_num', 'koi_quarters',
+       'koi_bin_oedp_sig','koi_steff', 'koi_slogg',
+       'koi_smet', 'koi_srad', 'koi_smass','ra',
+       'dec', 'koi_kepmag', 'koi_gmag', 'koi_rmag', 'koi_imag', 'koi_zmag',
+       'koi_jmag', 'koi_hmag', 'koi_kmag', 'koi_fwm_sra',
+       'koi_fwm_sdec', 'koi_fwm_srao', 'koi_fwm_sdeco', 'koi_fwm_prao',
+       'koi_fwm_pdeco', 'koi_dicco_mra', 'koi_dicco_mdec', 'koi_dicco_msky',
+       'koi_dikco_mra', 'koi_dikco_mdec', 'koi_dikco_msky']
+      
+       
 def RFC(file, feat):
     data = pd.read_csv(file)
     y = data.koi_disposition
-    featclean = []
-    featclean.append('rowid')   
-    for k in data.columns:
-        if k in feat:
-            featclean.append(k)
+    # Clean data
+#    featclean = []
+    feat.append('rowid')   
+#    for k in data.columns:
+#        if k in feat:
+#            featclean.append(k)
     
-    X = data[featclean]
+    X = data[feat]
     X = X.dropna(axis=0)
     missing = []
     for k in range(1,len(y)):
@@ -29,8 +48,12 @@ def RFC(file, feat):
         
     y = y.drop(missing)
     X = X.drop(columns='rowid')
-    train_X, val_X, train_y, val_y = train_test_split(X, y, random_state=0)
-    forest_model = RandomForestClassifier(random_state=1, n_estimators=100)
+    # Build model
+    train_X, val_X, train_y, val_y = train_test_split(X, y, train_size=0.7, random_state=0)
+    forest_model = RandomForestClassifier(random_state=1, 
+                                          n_estimators=500,
+                                          max_depth=16,
+                                          max_features='auto')
     forest_model.fit(train_X, train_y)
     print("Training model...")   
     accuracy = forest_model.score(train_X, train_y), forest_model.score(val_X, val_y)
@@ -42,72 +65,70 @@ def RFC(file, feat):
     feature_names = list(train_X.columns)
     xlabels = [feature_names[i] for i in indices] 
     y_ticks = np.arange(0, len(feature_names))
-    fig, ax = plt.subplots(figsize=(12,8))
+    fig, ax = plt.subplots(figsize=(14,12))
     ax.barh(y_ticks, importances[indices])
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(xlabels)
     
     ax.set_title("Random Forest Feature Importances (MDI)")
     plt.show()
-    return train_X, val_X, train_y, val_y, forest_model
+    return train_X, val_X, train_y, val_y, xlabels, forest_model
     
-file = "./cumulative.csv"
-feat = ['koi_prad', 'koi_period', 'koi_impact', 'koi_duration']
-train_X, val_X, train_y, val_y, rfcmodel = RFC(file, feat)
+#train_X, val_X, train_y, val_y, importances, rfcmodel = RFC(file, feat)
 
+# =============================================================================
+#              Correlation between numerical features in the dataset
+# =============================================================================
+from RFCdata import correlation
+#==============================================================================
+#                            MORE FEATURES
+#==============================================================================
+#transit_feat = ['koi_period', 'koi_impact', 'koi_duration', 'koi_depth', 'koi_prad',
+#                'koi_teq', 'koi_kepmag']  
 
+print('Building model...')              
+train_X, val_X, train_y, val_y, importances, rfcmodel = RFC(file, feat)   
+print('Computing correlations...')     
+cor, correlated, corfig = correlation(train_X, train_X.columns)
+
+#%%
+#==============================================================================
+#           Eliminate correlated features
+#==============================================================================
+#importances = importances[::-1] # natural order
+#print(importances)
+#for j in importances:
+#    for i in importances:
+#        if ([j,i] in correlated) == True:
+#            if importances.index(j) > importances.index(i):
+#                importances.remove(i)
+#            if importances.index(j) < importances.index(i):
+#                importances.remove(j)
 #%%
 # =============================================================================
 #                   Parameter selection with GridSearchCV
 # =============================================================================
-import datetime
-begin_time = datetime.datetime.now()
+#import datetime
+#begin_time = datetime.datetime.now()
+#print('Starting GridSearch...', begin_time)
+#
+# 
+#from sklearn.model_selection import GridSearchCV
+# 
+#parameters = {'n_estimators': np.arange(100,601,100), 
+#           'max_features': [None, 'auto','sqrt','log2'],
+#           'max_depth': [6,10,12,16]}
+#clf = GridSearchCV(rfcmodel, parameters)
+#clf.fit(train_X,train_y)            
+#print('Best parameters... ',clf.best_params_)
+#print('Best score = {:.2f}'.format(clf.best_score_))
+# 
+#print('Execution time...', datetime.datetime.now() - begin_time)
 
-from sklearn.model_selection import GridSearchCV
+# 13/11 at 14h
+# Best parameters...  {'max_depth': 16, 'n_estimators': 500, 'max_features': 'auto'}
+# Execution time... 0:13:26.552741
 
-parameters = {'n_estimators': np.arange(100,601,100), 
-              'max_features': [None, 'auto','sqrt','log2'],
-              'max_depth': [6,10,12]}
-clf = GridSearchCV(rfcmodel, parameters)
-clf.fit(train_X,train_y)            
-print('Best parameters... ',clf.best_params_)
-
-
-print('Execution time...', datetime.datetime.now() - begin_time)
-#%%
-# =============================================================================
-#              Correlation between numerical features in the dataset
-# =============================================================================
-import seaborn as sns
-corr_df=X[feat]  #New dataframe to calculate correlation between numeric features
-cor= corr_df.corr(method='pearson')
-print(cor)
-print('----------------------------------------------------------------------')
-correlated = []
-for i in feat:
-    for j in feat:
-        eps = cor[i][j]
-        if i != j:
-            if eps > 0.6:   # arbitrary threshold
-                if ([j,i] in correlated)==True: # avoid adding the same pair twice
-                    None
-                else:
-                        correlated.append([i,j])
-                        print('The features {:s} and {:s} are highly correlated. R2 = {:.2f}'.format(i,j, eps))
-#%%            
-fig, ax =plt.subplots(figsize=(8, 6))
-plt.title("Correlation Plot")
-
-sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), 
-            cmap=sns.diverging_palette(220, 10, as_cmap=True),
-            square=True, ax=ax)
-
-plt.savefig('../Images/pearson.png', dpi=150)
-plt.show()
-# there is significant correlation between koi_impact and koi_prad as expected
-''' It seems that multicollinearity is well handled by RFC, however, it will make
-it easier and faster for the user to eliminate highly correlated variables,
-with pearson > 0.7 for instance '''
 
 
 

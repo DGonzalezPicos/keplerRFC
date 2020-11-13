@@ -6,3 +6,5 @@ $ git push
 
 To clone the repo just:
 $ git clone URL --branch master
+To update repo:
+$ git pull <URL> <branch>
