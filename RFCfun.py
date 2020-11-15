@@ -71,6 +71,7 @@ def RFC(file, feat):
     ax.set_yticklabels(xlabels)
     
     ax.set_title("Random Forest Feature Importances (MDI)")
+    plt.savefig('images/importance.png', dpi=150)
     plt.show()
     return train_X, val_X, train_y, val_y, xlabels, forest_model
     
@@ -89,7 +90,7 @@ from RFCdata import correlation
 print('Building model...')              
 train_X, val_X, train_y, val_y, importances, rfcmodel = RFC(file, feat)   
 print('Computing correlations...')     
-cor, correlated, corfig = correlation(train_X, train_X.columns)
+cor, correlated, corfig = correlation(train_X, train_X.columns, eps=0.90)
 
 #%%
 #==============================================================================
@@ -130,5 +131,9 @@ cor, correlated, corfig = correlation(train_X, train_X.columns)
 # Execution time... 0:13:26.552741
 
 
-
-
+#%% 
+# =============================================================================
+#                   PREDICT OBJECT CLASS
+# =============================================================================
+k218b = val_X.sample(n=10)
+rfcmodel.predict(k218b)
