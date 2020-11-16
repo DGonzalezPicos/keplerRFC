@@ -38,9 +38,11 @@ def correlation(train_X, feat, eps=0.70):
     sns.heatmap(cor, mask=np.zeros_like(cor, dtype=np.bool), 
                 cmap=sns.diverging_palette(220, 10, as_cmap=True),
                 square=True, ax=ax)
+    plt.tight_layout()
     try:
         plt.savefig('./images/pearson.png', dpi=150)
     except:
         print('The directory ./images does not exist! Unable to save pearson.png')
     plt.show()
     return cor, correlated, fig
+    

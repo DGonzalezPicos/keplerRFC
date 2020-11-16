@@ -135,5 +135,22 @@ cor, correlated, corfig = correlation(train_X, train_X.columns, eps=0.90)
 # =============================================================================
 #                   PREDICT OBJECT CLASS
 # =============================================================================
-k218b = val_X.sample(n=10)
-rfcmodel.predict(k218b)
+
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
+y_pred = rfcmodel.predict(val_X)
+cm = confusion_matrix(val_y, y_pred)
+
+row_sums = cm.sum(axis=1)
+cm_normed = cm / row_sums[:, np.newaxis]
+
+names = val_y.unique()
+print(names)
+fig, axs = plt.subplots(ncols=2, figsize=(16,6))
+for matrix, style, axes in [(cm,'d',0), (cm_normed,'.2%', 1)]:
+    sns.heatmap(matrix, xticklabels=names, yticklabels=names, annot=True, fmt=style, cmap='Blues',ax=axs[axes])
+
+plt.savefig('images/confmatrix.png', dpi=150)
+plt.show()
+
